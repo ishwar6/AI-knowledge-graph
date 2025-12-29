@@ -1,0 +1,7 @@
+rules:
+  - name: high_coupling_model
+    threshold_fk: 10
+    recommendation: "Split models with high foreign key counts into bounded contexts."
+  - name: repeated_raw_sql
+    threshold_queries: 5
+    recommendation: "Replace raw SQL loops with ORM + caching strategies."

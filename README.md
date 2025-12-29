@@ -1,4 +1,4 @@
-# AI-Powered Code Intelligence Graph (POC #2)
+# AI-Powered Code Intelligence Graph  
 
 This repository contains a proof-of-concept pipeline that scans a Django (or similar Python) backend repo, builds a knowledge graph schema in Neo4j, and returns AI-driven insights.
 

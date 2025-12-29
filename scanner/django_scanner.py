@@ -172,7 +172,16 @@ def scan_repo(root: Path) -> ScanResult:
             if import_info.module:
                 result.module_dependencies.append((module_name, import_info.module))
 
-    _hydrate_relationships(result)
+        for view in result.views:
+            for model in result.models:
+                if model.name.lower() in view.name.lower():
+                    result.view_model_usage.append((view.name, model.name))
+
+        for view in result.views:
+            for service in result.services:
+                if service.name.lower() in view.name.lower():
+                    result.view_service_calls.append((view.name, service.name))
+
     return result
 
 
@@ -181,18 +190,3 @@ def _collect_calls(parsed: ParsedClass) -> list[str]:
     for method in parsed.methods:
         calls.extend(method.calls)
     return calls
-
-
-def _hydrate_relationships(result: ScanResult) -> None:
-    model_lookup = {model.name.lower(): model for model in result.models}
-    for view in result.views:
-        for model_name, model in model_lookup.items():
-            if model_name in view.name.lower():
-                result.view_model_usage.append((view.name, model.name))
-                model.used_in_views += 1
-
-    service_lookup = {service.name.lower(): service for service in result.services}
-    for view in result.views:
-        for service_name, service in service_lookup.items():
-            if service_name in view.name.lower():
-                result.view_service_calls.append((view.name, service.name))

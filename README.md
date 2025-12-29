@@ -1,36 +1,15 @@
-# AI-Powered Code Intelligence Graph (POC #2)
+# AI-Powered Code Intelligence Graph  
 
-Turn a Django (or Node / Go) backend into a living, queryable knowledge graph. This proof-of-concept scans your repo with AST parsing, pushes structure into Neo4j, and then returns AI-style insights about architecture hotspots, coupling, and anti-patterns.
+This repository contains a proof-of-concept pipeline that scans a Django (or similar Python) backend repo, builds a knowledge graph schema in Neo4j, and returns AI-driven insights.
 
-If your repo feels like spaghetti, this is the map.
+## Features
 
-## Why this exists
+- AST-based parsing of Python code to extract modules, models, views, services, and raw SQL usage.
+- Graph ingestion into Neo4j with an expanded schema.
+- AI-style insights including refactoring priorities, dead code candidates, and a complexity score.
+- FastAPI endpoint to drive scans.
 
-Modern backend projects tend to drift into:
-
-- **Tightly coupled models** that become impossible to change
-- **Duplicate service logic** hidden across files
-- **Views hitting the DB directly** without caching or batching
-- **Implicit dependencies** buried in imports or service calls
-
-This project is a fast, practical way to visualize and explain those issues.
-
-## What it does
-
-**Scan → Graph → Insights**
-
-1. Parse Python files using the AST.
-2. Create nodes and relationships in Neo4j.
-3. Run AI-style heuristics to surface architectural signals.
-
-You get answers like:
-
-- Which model is most coupled?
-- Which API endpoints execute raw SQL repeatedly?
-- What looks unused or dead?
-- Which modules are circularly dependent?
-
-## Repository layout
+## Folder Structure
 
 ```
 neo4j-code-intel/
@@ -53,27 +32,21 @@ neo4j-code-intel/
 │─ docker-compose.yml
 ```
 
-## Quick start
+## Running the API
 
-### 1) Install dependencies
+1. Install dependencies (FastAPI, Neo4j driver):
 
 ```bash
 pip install fastapi uvicorn neo4j pydantic
 ```
 
-### 2) Start Neo4j (optional but recommended)
-
-```bash
-docker-compose up -d
-```
-
-### 3) Run the API
+2. Start the API:
 
 ```bash
 uvicorn api.app:app --reload
 ```
 
-### 4) Trigger a scan
+3. Trigger a scan:
 
 ```bash
 curl -X POST http://localhost:8000/scan \
@@ -87,7 +60,7 @@ curl -X POST http://localhost:8000/scan \
   }'
 ```
 
-## Neo4j schema (expanded)
+## Neo4j Schema
 
 ```
 (:Module {name, path, loc, complexity})
@@ -103,7 +76,7 @@ curl -X POST http://localhost:8000/scan \
 (:View)-[:USES_MODEL]->(:Model)
 ```
 
-## AI insights (sample)
+## Example Output
 
 ```json
 {
@@ -118,32 +91,3 @@ curl -X POST http://localhost:8000/scan \
   "complexity_score": 0.82
 }
 ```
-
-## Example Cypher queries
-
-```cypher
-// Most coupled model
-MATCH (m:Model)-[:FOREIGN_KEY_TO]->()
-RETURN m.name AS model, COUNT(*) AS fk_edges
-ORDER BY fk_edges DESC
-LIMIT 5;
-
-// Views with repeated SQL calls
-MATCH (v:View)-[:CALLS]->(:Service)-[:EXECUTES_QUERY]->(q:DBQuery)
-RETURN v.name AS view, COUNT(q) AS sql_calls
-ORDER BY sql_calls DESC
-LIMIT 5;
-```
-
-## What to build next
-
-Ideas that pair nicely with this POC:
-
-- Add coverage for **Node** or **Go** parsers
-- Attach **query frequency** or **response time** metrics
-- Add **DRF cache suggestions** per endpoint
-- Export visualization-ready graph bundles
-
----
-
-If you want this adapted for a real production repo, plug in your codebase, point Neo4j at it, and iterate from there.
